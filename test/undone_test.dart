@@ -83,10 +83,10 @@ void testActionConstructorNotUndoable() {
 
 @Test('Test that action constructors throw ArgumentError on null functions.')
 void testActionConstructorNullThrows() {
-  expect(() => new Action(7, null, (x, y) => x = y), 
+  expect(() => new Action(7, null, (x, y) => x = y),
       throwsA(const isInstanceOf<ArgumentError>()));
-  expect(() => new Action.async(11, null, 
-      (x, y) =>new Future(() => x = y)), 
+  expect(() => new Action.async(11, null,
+      (x, y) =>new Future(() => x = y)),
       throwsA(const isInstanceOf<ArgumentError>()));
 }
 
@@ -121,7 +121,7 @@ void testActionThrows() {
 
 @Test('Test that a non-undoable action computes as expected.')
 void testActionNonUndoable() {
-  var action = new Action(14, (x) => x + 1);
+  var action = new Action(14, (x) => x + 1, null);
   action()
     .then(expectAsync((result) {
       expect(result, equals(15));
@@ -351,8 +351,8 @@ void testClear() {
 @ExpectError(isStateError)
 testActionTimeoutNeverComplete() {
   var schedule = new Schedule();
-  var action = new Action.async(42, (_) => new Completer().future, null, 
-      const Duration(milliseconds: 100));
+  var action = new Action.async(42, (_) => new Completer().future, null,
+      timeout: const Duration(milliseconds: 100));
   return schedule(action);
 }
 
@@ -360,9 +360,9 @@ testActionTimeoutNeverComplete() {
 @ExpectError(isStateError)
 testActionTimeoutThenComplete() {
   var schedule = new Schedule();
-  var action = new Action.async(42, 
+  var action = new Action.async(42,
       (_) => new Future.delayed(const Duration(milliseconds: 200)),
-      null, const Duration(milliseconds: 100));
+      null, timeout: const Duration(milliseconds: 100));
   return schedule(action);
 }
 
@@ -371,9 +371,9 @@ testActionTimeoutThenComplete() {
 testUndoTimeout() {
   var schedule = new Schedule();
   var map = { 'val' : 42 };
-  var action = 
+  var action =
       new Action.async(map, incrementAsync, (_,__) => new Completer().future,
-          const Duration(milliseconds: 100));
+          timeout: const Duration(milliseconds: 100));
   return schedule(action)
     .then((result) {
       expect(result, equals(43));

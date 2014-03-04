@@ -77,8 +77,8 @@ class Action<A, R> {
   Completer _deferred;
   
   /// Whether or not this action can be undone.
-  final bool canUndo;
-  
+  bool get canUndo => _undo != null;
+
   /// The maximum allowed duration for this action's [Do] or [Undo] function.
   /// 
   /// A `null` value represents no timeout, and is the default for actions
@@ -88,38 +88,28 @@ class Action<A, R> {
   /// 
   /// When a timeout occurs, this action will complete with an error.
   final Duration timeout;
-  
-  /// Creates a new action with the given [arg]uments, [Do] function, and 
-  /// [Undo] function.  
-  /// 
-  /// The given synchronous functions are automatically wrapped in futures prior 
+
+  /// A label used to describe this action.
+  final String label;
+
+  /// Creates a new action with the given [arg]uments, [Do] function, and
+  /// [Undo] function.
+  ///
+  /// The given synchronous functions are automatically wrapped in futures prior
   /// to being called on a schedule.
-  Action(
-      A arg, 
-      Do d, 
-      [Undo u]) 
-  : this._(
-      arg, 
-      d == null ? d : (a) => new Future.sync(() => d(a)), 
-      u == null ? u : (a, r) => new Future.sync(() => u(a, r)));
-  
-  /// Creates a new action with the given [arg]uments, [DoAsync] function, 
+  Action(A arg, Do d, Undo undo, {String label}) :
+    this._(
+      arg,
+      d == null ? d : (a) => new Future.sync(() => d(a)),
+      undo == null ? undo : (a, r) => new Future.sync(() => undo(a, r)),
+      label: label);
+
+  /// Creates a new action with the given [arg]uments, [DoAsync] function,
   /// [UndoAsync] function, and timeout [Duration].
-  Action.async(
-      A arg, 
-      DoAsync d, 
-     [UndoAsync u, 
-      Duration timeout = const Duration(seconds: 30)]) 
-  : this._(arg, d, u, timeout);
-  
-  Action._(
-      this._arg, 
-      this._do, 
-      UndoAsync undo, 
-     [Duration timeout]) 
-  : canUndo = (undo != null)
-  , timeout = timeout
-  , _undo = undo {
+  Action.async(A arg, DoAsync d, UndoAsync undo, {Duration timeout: const Duration(seconds: 30), String label}) :
+    this._(arg, d, undo, timeout: timeout, label: label);
+
+  Action._(this._arg, this._do, this._undo, {this.timeout, this.label}) {
     if (_do == null) {
       throw new ArgumentError('Do function must be !null.');    
     }
